@@ -28,12 +28,18 @@
 <body <?php body_class(); ?>>
 <div id="page" class="site">
 	<a class="skip-link screen-reader-text" href="#content"><?php esc_html_e( 'Skip to content', 'ct-custom' ); ?></a>
+	<?php
+	$ct_phone      = get_option( 'ct_phone', '385.154.11.28.35' );
+	$ct_logo_id    = (int) get_option( 'ct_logo_id' );
+	$ct_logo_url   = $ct_logo_id ? wp_get_attachment_image_url( $ct_logo_id, 'full' ) : '';
+	$ct_logo_alt   = get_bloginfo( 'name' );
+	?>
 
 	<header id="masthead" class="site-header">
 		<?php if ( is_page_template( 'homepage.php' ) ) : ?>
 			<div class="homepage-topbar">
 				<div class="homepage-topbar__inner">
-					<p><span>Call us now!</span><strong>385.154.11.28.35</strong></p>
+					<p><span>Call us now!</span><strong><?php echo esc_html( $ct_phone ); ?></strong></p>
 					<div class="homepage-topbar__links">
 						<a href="#">Login</a>
 						<a href="#">Signup</a>
@@ -46,7 +52,7 @@
 
 		<div class="site-branding">
 			<?php if ( is_page_template( 'homepage.php' ) ) : ?>
-				<p class="site-title site-title--mockup"><a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home">YOUR<span>LOGO</span></a></p>
+				<p class="site-title site-title--mockup"><a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php if ( $ct_logo_url ) : ?><img src="<?php echo esc_url( $ct_logo_url ); ?>" alt="<?php echo esc_attr( $ct_logo_alt ); ?>"><?php else : ?>YOUR<span>LOGO</span><?php endif; ?></a></p>
 			<?php else : ?>
 				<?php
 				the_custom_logo();

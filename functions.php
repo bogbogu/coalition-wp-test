@@ -172,72 +172,177 @@ if ( class_exists( 'WooCommerce' ) ) {
 */
 
 function ct_add_theme_settings() {
-    add_menu_page(
-        'Theme Settings',
-        'Theme Settings',
-        'manage_options',
-        'ct-theme-settings',
-        'ct_theme_settings_page',
-        'dashicons-admin-generic',
-        20
-    );
+	add_menu_page(
+		'Theme Settings',
+		'Theme Settings',
+		'manage_options',
+		'ct-theme-settings',
+		'ct_theme_settings_page',
+		'dashicons-admin-generic',
+		20
+	);
 }
-add_action('admin_menu', 'ct_add_theme_settings');
-
+add_action( 'admin_menu', 'ct_add_theme_settings' );
 
 function ct_theme_settings_page() {
-?>
-    <div class="wrap">
-        <h1>Theme Settings</h1>
-        <form method="post" action="options.php">
-            <?php
-                settings_fields('ct_theme_settings_group');
-                do_settings_sections('ct-theme-settings');
-                submit_button();
-            ?>
-        </form>
-    </div>
-<?php
+	?>
+	<div class="wrap">
+		<h1><?php esc_html_e( 'Theme Settings', 'ct-custom' ); ?></h1>
+		<form method="post" action="options.php">
+			<?php
+			settings_fields( 'ct_theme_settings_group' );
+			do_settings_sections( 'ct-theme-settings' );
+			submit_button();
+			?>
+		</form>
+	</div>
+	<?php
 }
 
 function ct_register_theme_settings() {
+	register_setting(
+		'ct_theme_settings_group',
+		'ct_logo_id',
+		array(
+			'sanitize_callback' => 'absint',
+		)
+	);
 
-    register_setting('ct_theme_settings_group', 'ct_logo');
-    register_setting('ct_theme_settings_group', 'ct_phone');
-    register_setting('ct_theme_settings_group', 'ct_address');
-    register_setting('ct_theme_settings_group', 'ct_fax');
-    register_setting('ct_theme_settings_group', 'ct_social');
+	register_setting(
+		'ct_theme_settings_group',
+		'ct_phone',
+		array(
+			'sanitize_callback' => 'sanitize_text_field',
+		)
+	);
 
-    add_settings_section('ct_section', '', null, 'ct-theme-settings');
+	register_setting(
+		'ct_theme_settings_group',
+		'ct_address',
+		array(
+			'sanitize_callback' => 'sanitize_textarea_field',
+		)
+	);
 
-    add_settings_field('ct_logo', 'Logo URL', 'ct_logo_callback', 'ct-theme-settings', 'ct_section');
-    add_settings_field('ct_phone', 'Phone Number', 'ct_phone_callback', 'ct-theme-settings', 'ct_section');
-    add_settings_field('ct_address', 'Address', 'ct_address_callback', 'ct-theme-settings', 'ct_section');
-    add_settings_field('ct_fax', 'Fax Number', 'ct_fax_callback', 'ct-theme-settings', 'ct_section');
-    add_settings_field('ct_social', 'Social Links', 'ct_social_callback', 'ct-theme-settings', 'ct_section');
+	register_setting(
+		'ct_theme_settings_group',
+		'ct_fax',
+		array(
+			'sanitize_callback' => 'sanitize_text_field',
+		)
+	);
+
+	register_setting(
+		'ct_theme_settings_group',
+		'ct_social_facebook',
+		array(
+			'sanitize_callback' => 'esc_url_raw',
+		)
+	);
+
+	register_setting(
+		'ct_theme_settings_group',
+		'ct_social_twitter',
+		array(
+			'sanitize_callback' => 'esc_url_raw',
+		)
+	);
+
+	register_setting(
+		'ct_theme_settings_group',
+		'ct_social_linkedin',
+		array(
+			'sanitize_callback' => 'esc_url_raw',
+		)
+	);
+
+	register_setting(
+		'ct_theme_settings_group',
+		'ct_social_pinterest',
+		array(
+			'sanitize_callback' => 'esc_url_raw',
+		)
+	);
+
+	add_settings_section( 'ct_section', '', null, 'ct-theme-settings' );
+
+	add_settings_field( 'ct_logo_id', 'Logo', 'ct_logo_callback', 'ct-theme-settings', 'ct_section' );
+	add_settings_field( 'ct_phone', 'Phone Number', 'ct_phone_callback', 'ct-theme-settings', 'ct_section' );
+	add_settings_field( 'ct_address', 'Address Information', 'ct_address_callback', 'ct-theme-settings', 'ct_section' );
+	add_settings_field( 'ct_fax', 'Fax Number', 'ct_fax_callback', 'ct-theme-settings', 'ct_section' );
+	add_settings_field( 'ct_social_facebook', 'Facebook URL', 'ct_social_facebook_callback', 'ct-theme-settings', 'ct_section' );
+	add_settings_field( 'ct_social_twitter', 'Twitter URL', 'ct_social_twitter_callback', 'ct-theme-settings', 'ct_section' );
+	add_settings_field( 'ct_social_linkedin', 'LinkedIn URL', 'ct_social_linkedin_callback', 'ct-theme-settings', 'ct_section' );
+	add_settings_field( 'ct_social_pinterest', 'Pinterest URL', 'ct_social_pinterest_callback', 'ct-theme-settings', 'ct_section' );
 }
-add_action('admin_init', 'ct_register_theme_settings');
+add_action( 'admin_init', 'ct_register_theme_settings' );
 
+function ct_theme_settings_admin_assets( $hook ) {
+	if ( 'toplevel_page_ct-theme-settings' !== $hook ) {
+		return;
+	}
+
+	wp_enqueue_media();
+	wp_enqueue_script(
+		'ct-theme-settings-admin',
+		get_template_directory_uri() . '/js/theme-settings-admin.js',
+		array( 'jquery' ),
+		'1.0.0',
+		true
+	);
+}
+add_action( 'admin_enqueue_scripts', 'ct_theme_settings_admin_assets' );
 
 function ct_logo_callback() {
-    $value = get_option('ct_logo');
-    echo '<input type="text" name="ct_logo" value="'.esc_attr($value).'" class="regular-text">';
+	$logo_id  = (int) get_option( 'ct_logo_id' );
+	$logo_url = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
+	?>
+	<input type="hidden" id="ct_logo_id" name="ct_logo_id" value="<?php echo esc_attr( $logo_id ); ?>">
+	<div id="ct_logo_preview" style="margin-bottom:10px;">
+		<?php if ( $logo_url ) : ?>
+			<img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php esc_attr_e( 'Selected logo', 'ct-custom' ); ?>" style="max-width:150px;height:auto;display:block;">
+		<?php endif; ?>
+	</div>
+	<button type="button" class="button" id="ct_logo_upload"><?php esc_html_e( 'Upload Logo', 'ct-custom' ); ?></button>
+	<button type="button" class="button" id="ct_logo_remove"><?php esc_html_e( 'Remove Logo', 'ct-custom' ); ?></button>
+	<p class="description"><?php esc_html_e( 'Upload a logo image from the media library.', 'ct-custom' ); ?></p>
+	<?php
 }
 
 function ct_phone_callback() {
-    echo '<input type="text" name="ct_phone" value="'.esc_attr(get_option('ct_phone')).'" class="regular-text">';
+	$phone = get_option( 'ct_phone', '' );
+	echo '<input type="text" name="ct_phone" value="' . esc_attr( $phone ) . '" class="regular-text">';
 }
 
 function ct_address_callback() {
-    echo '<textarea name="ct_address" class="large-text">'.esc_textarea(get_option('ct_address')).'</textarea>';
+	$address = get_option( 'ct_address', '' );
+	echo '<textarea name="ct_address" class="large-text" rows="4">' . esc_textarea( $address ) . '</textarea>';
+	echo '<p class="description">' . esc_html__( 'Use one line per row (example: company name, street, city).', 'ct-custom' ) . '</p>';
 }
 
 function ct_fax_callback() {
-    echo '<input type="text" name="ct_fax" value="'.esc_attr(get_option('ct_fax')).'" class="regular-text">';
+	$fax = get_option( 'ct_fax', '' );
+	echo '<input type="text" name="ct_fax" value="' . esc_attr( $fax ) . '" class="regular-text">';
 }
 
-function ct_social_callback() {
-    echo '<textarea name="ct_social" class="large-text">'.esc_textarea(get_option('ct_social')).'</textarea>';
+function ct_social_facebook_callback() {
+	$value = get_option( 'ct_social_facebook', '' );
+	echo '<input type="url" name="ct_social_facebook" value="' . esc_attr( $value ) . '" class="regular-text" placeholder="https://facebook.com/your-page">';
+}
+
+function ct_social_twitter_callback() {
+	$value = get_option( 'ct_social_twitter', '' );
+	echo '<input type="url" name="ct_social_twitter" value="' . esc_attr( $value ) . '" class="regular-text" placeholder="https://twitter.com/your-profile">';
+}
+
+function ct_social_linkedin_callback() {
+	$value = get_option( 'ct_social_linkedin', '' );
+	echo '<input type="url" name="ct_social_linkedin" value="' . esc_attr( $value ) . '" class="regular-text" placeholder="https://linkedin.com/in/your-profile">';
+}
+
+function ct_social_pinterest_callback() {
+	$value = get_option( 'ct_social_pinterest', '' );
+	echo '<input type="url" name="ct_social_pinterest" value="' . esc_attr( $value ) . '" class="regular-text" placeholder="https://pinterest.com/your-profile">';
 }
 
 
